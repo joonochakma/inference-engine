@@ -82,6 +82,7 @@ def parse_input_file(file_path):
             elif line and mode == 'ASK':
                 query = Proposition(line.strip())
 
+    propositions.discard('')
     return knowledge_base, query, propositions
 
 
