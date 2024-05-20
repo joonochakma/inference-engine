@@ -24,7 +24,6 @@ def parse_input(file_content):
 def get_propositions(sentences):
     propositions = set()
     for sentence in sentences:
-        # Extract words that are propositions
         matches = re.findall(r'\b[a-zA-Z][a-zA-Z0-9]*\b', sentence)
         propositions.update(matches)
     return sorted(propositions)
@@ -33,16 +32,16 @@ def generate_truth_table(propositions):
     return list(itertools.product([False, True], repeat=len(propositions)))
 
 def convert_expression(expression):
-    # Replace logical operators with Python's logical operators
-    # expression = expression.replace("=>", "<=").replace("&", " and ").replace("|", " or ").replace("~", " not ")
-    expression = expression.replace("=>", "<=").replace("&", " and ")
+    expression = expression.replace("<=>", "==")
+    expression = expression.replace("=>", "<=")
+    expression = expression.replace("&", " and ")
+    expression = expression.replace("||", " or ")
+    expression = re.sub(r'~(\w+)', r'(not \1)', expression)
     return expression
 
 def evaluate_expression(expression, truth_assignment):
-    # Replace propositions with their truth values in the expression using regular expressions
     for prop, value in truth_assignment.items():
         expression = re.sub(r'\b' + re.escape(prop) + r'\b', str(value), expression)
-    # Convert logical operators
     expression = convert_expression(expression)
     return eval(expression)
 
@@ -70,7 +69,7 @@ def main(file_content):
             counter +=1
         else:
             continue
-    
+        
     if entailment:
         print(f"YES: {counter}")
     else:
