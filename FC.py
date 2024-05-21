@@ -38,18 +38,14 @@ def parse_input_file(file_path):
                 for part in parts:
                     if '=>' in part:
                         implication_parts = part.split('=>')
-                        premises = [Proposition(p.strip()) for p in implication_parts[0].split('&')]
-                        conclusion = Proposition(implication_parts[1].strip())
+                        premises = [propositions.setdefault(p.strip(), Proposition(p.strip())) for p in implication_parts[0].split('&')]
+                        conclusion = propositions.setdefault(implication_parts[1].strip(), Proposition(implication_parts[1].strip()))
                         knowledge_base.append(Implication(premises, conclusion))
-                        for p in premises:
-                            if p.symbol not in propositions:
-                                propositions[p.symbol] = p
-                        if conclusion.symbol not in propositions:
-                            propositions[conclusion.symbol] = conclusion
                     else:
                         symbol = part.strip()
                         if symbol not in propositions:
                             propositions[symbol] = Proposition(symbol)
+                        propositions[symbol].truth_value = True  # Initial facts are true
             elif line and mode == 'ASK':
                 query = Proposition(line.strip())
                 if query.symbol not in propositions:
@@ -80,11 +76,6 @@ def main():
     file_path = sys.argv[1]  # Change this to your input file path
     knowledge_base, query_prop, propositions = parse_input_file(file_path)
 
-    # Assume initial facts are true
-    for prop in propositions.values():
-        if prop.symbol.islower():
-            prop.truth_value = True
-
     # Perform forward chaining
     inferred = forward_chain(knowledge_base, propositions)
 
@@ -101,9 +92,9 @@ def main():
 
     print("\nEntailment Result:")
     if query_prop.symbol in inferred:
-        print("The query is entailed by the knowledge base.")
+        print(f"YES: {', '.join(sorted(inferred))}")
     else:
-        print("The query is not entailed by the knowledge base.")
+        print("NO")
 
 if __name__ == "__main__":
     main()
