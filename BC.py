@@ -53,31 +53,37 @@ def parse_input_file(file_path):
 
     return knowledge_base, query, propositions
 
-def forward_chain(knowledge_base, propositions):
-    inferred = set()
-    agenda = [prop for prop in propositions.values() if prop.truth_value]
+def backward_chain(query, knowledge_base, inferred=None):
+    if inferred is None:
+        inferred = set()
 
-    while agenda:
-        p = agenda.pop(0)
-        if p.symbol in inferred:
-            continue
-        inferred.add(p.symbol)
+    if query.symbol in inferred:
+        return True
 
-        for implication in knowledge_base:
-            if p in implication.premises:
-                implication.premises.remove(p)
-                if not implication.premises:
-                    implication.conclusion.truth_value = True
-                    agenda.append(implication.conclusion)
-    
-    return inferred
+    if query.evaluate():
+        return True
+
+    for implication in knowledge_base:
+        if implication.conclusion.symbol == query.symbol:
+            all_premises_true = True
+            for premise in implication.premises:
+                if not backward_chain(premise, knowledge_base, inferred):
+                    all_premises_true = False
+                    break
+            if all_premises_true:
+                query.truth_value = True
+                inferred.add(query.symbol)
+                return True
+
+    return False
 
 def main():
     file_path = sys.argv[1]  # Change this to your input file path
     knowledge_base, query_prop, propositions = parse_input_file(file_path)
 
-    # Perform forward chaining
-    inferred = forward_chain(knowledge_base, propositions)
+    # Perform backward chaining
+    inferred = set()
+    entails = backward_chain(query_prop, knowledge_base, inferred)
 
     print("Knowledge Base:")
     for implication in knowledge_base:
@@ -91,7 +97,7 @@ def main():
     print(query_prop.symbol)
 
     print("\nEntailment Result:")
-    if query_prop.symbol in inferred:
+    if entails:
         print(f"YES: {', '.join(sorted(inferred))}")
     else:
         print("NO")
