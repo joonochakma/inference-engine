@@ -73,24 +73,16 @@ def forward_chain(knowledge_base, propositions):
     return inferred
 
 def main():
-    file_path = sys.argv[1]  # Change this to your input file path
+    if len(sys.argv) != 2:
+        print("Usage: python FC.py <filename>")
+        sys.exit(1)
+
+    file_path = sys.argv[1]
     knowledge_base, query_prop, propositions = parse_input_file(file_path)
 
     # Perform forward chaining
     inferred = forward_chain(knowledge_base, propositions)
 
-    print("Knowledge Base:")
-    for implication in knowledge_base:
-        print(implication)
-
-    print("\nIndividual Propositions:")
-    for prop in propositions.values():
-        print(f"{prop.symbol}: {'True' if prop.truth_value else 'False'}")
-
-    print("\nQuery:")
-    print(query_prop.symbol)
-
-    print("\nEntailment Result:")
     if query_prop.symbol in inferred:
         print(f"YES: {', '.join(sorted(inferred))}")
     else:
