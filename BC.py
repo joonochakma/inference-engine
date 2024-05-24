@@ -45,7 +45,9 @@ def parse_input_file(file_path):
                         symbol = part.strip()
                         if symbol not in propositions:
                             propositions[symbol] = Proposition(symbol)
-                        propositions[symbol].truth_value = True  # Initial facts are true
+                            propositions[symbol].truth_value = True  # Initial facts are true
+                        # Add proposition with initial support to knowledge base
+                        knowledge_base.append(Implication([], propositions[symbol]))
             elif line and mode == 'ASK':
                 query = Proposition(line.strip())
                 if query.symbol not in propositions:
@@ -53,52 +55,42 @@ def parse_input_file(file_path):
 
     return knowledge_base, query, propositions
 
-def backward_chain(query, knowledge_base, inferred=None):
-    if inferred is None:
-        inferred = set()
+def backward_chain(knowledge_base, query_prop):
+    inferred = []
 
-    if query.symbol in inferred:
-        return True
+    def backward_chain_helper(symbol):
+        print("Checking symbol:", symbol)  # Debug print
+        if symbol in inferred:
+            print("Symbol already inferred:", symbol)  # Debug print
+            return True
+        inferred.append(symbol)
+        for implication in knowledge_base:
+            if implication.conclusion.symbol == symbol:
+                print("Checking implication:", implication)  # Debug print
+                if all(backward_chain_helper(p.symbol) for p in implication.premises):
+                    print("All premises of", implication, "are inferred")  # Debug print
+                    return True
+        print("No support found for symbol:", symbol)  # Debug print
+        return False
 
-    if query.evaluate():
-        return True
-
-    for implication in knowledge_base:
-        if implication.conclusion.symbol == query.symbol:
-            all_premises_true = True
-            for premise in implication.premises:
-                if not backward_chain(premise, knowledge_base, inferred):
-                    all_premises_true = False
-                    break
-            if all_premises_true:
-                query.truth_value = True
-                inferred.add(query.symbol)
-                return True
-
-    return False
+    result = backward_chain_helper(query_prop.symbol)
+    return result, inferred[::-1]
 
 def main():
     file_path = sys.argv[1]  # Change this to your input file path
     knowledge_base, query_prop, propositions = parse_input_file(file_path)
 
+    print("Knowledge Base:")  # Debug print
+    for implication in knowledge_base:  # Debug print
+        print(implication)  # Debug print
+    print("Query:", query_prop)  # Debug print
+
     # Perform backward chaining
-    inferred = set()
-    entails = backward_chain(query_prop, knowledge_base, inferred)
+    result, inferred = backward_chain(knowledge_base, query_prop)
 
-    print("Knowledge Base:")
-    for implication in knowledge_base:
-        print(implication)
-
-    print("\nIndividual Propositions:")
-    for prop in propositions.values():
-        print(f"{prop.symbol}: {'True' if prop.truth_value else 'False'}")
-
-    print("\nQuery:")
-    print(query_prop.symbol)
-
-    print("\nEntailment Result:")
-    if entails:
-        print(f"YES: {', '.join(sorted(inferred))}")
+    print("Entailment Result:")
+    if result:
+        print(f"YES: {', '.join(inferred)}")
     else:
         print("NO")
 
