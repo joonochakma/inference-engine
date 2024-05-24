@@ -36,7 +36,14 @@ def convert_expression(expression):
     expression = expression.replace("=>", "<=")
     expression = expression.replace("&", " and ")
     expression = expression.replace("||", " or ")
-    expression = re.sub(r'~(\w+)', r'(not \1)', expression)
+    
+    # Use a loop to handle nested negations properly
+    while '~~' in expression:
+        expression = expression.replace('~~', '')  # Remove double negations
+    
+    # Adjust the regular expression pattern to handle nested negations
+    expression = re.sub(r'~(\w+)', r'(not (\1))', expression)
+    
     return expression
 
 def evaluate_expression(expression, truth_assignment):
