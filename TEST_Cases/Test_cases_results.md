@@ -31,3 +31,5 @@
 
 **Test Case 5: Complex Expression:** Expected Output: YES
 
+**Test Case 6: Combined Expressions:** Expected Output: NO
+
